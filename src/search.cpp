@@ -795,7 +795,7 @@ Value Search::Worker::search(
             // until ply exceeds nmpMinPly.
             nmpMinPly = ss->ply + 3 * (depth - R) / 4;
 
-            Value v = search<NonPV>(pos, ss, beta - 1, beta, depth - R, flase);
+            Value v = search<NonPV>(pos, ss, beta - 1, beta, depth - R, false);
 
             nmpMinPly = 0;
 
@@ -1128,8 +1128,10 @@ moves_loop:  // When in check, search starts here
                 const bool doDeeperSearch = d < newDepth && value > (bestValue + 53 + 2 * newDepth);
                 const bool doShallowerSearch = value < bestValue + 9;
 
+                newDepth += doDeeperSearch - doShallowerSearch;
 
-                value = -search<NonPV>(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode);
+                if (newDepth > d)
+                    value = -search<NonPV>(pos, ss + 1, -(alpha + 1), -alpha, newDepth, !cutNode);
 
                 // Post LMR continuation history updates
                 update_continuation_histories(ss, movedPiece, move.to_sq(), 1528);
@@ -1237,7 +1239,7 @@ moves_loop:  // When in check, search starts here
         {
             bestValue = value;
 
-            if (value + inc > alpha)
+            if (value > alpha)
             {
                 bestMove = move;
 
